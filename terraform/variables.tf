@@ -7,8 +7,14 @@ variable "resources_location" {
 
 variable "resource_name_prefix" {
   type        = string
+  default     = "shacharb"
+  description = "Prefix of resources in  Azure subscription."
+}
+
+variable "resource_group_name" {
+  type        = string
   default     = "shacharb-CANDIDATE_RG"
-  description = "Prefix of the resource group name and others in your Azure subscription."
+  description = "resource group name in Azure subscription."
 }
 
 variable "subscription_id" {
