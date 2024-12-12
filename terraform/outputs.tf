@@ -19,3 +19,12 @@ output "vm_subnet" {
 output "jenkins_public_ip_address" {
   value = azurerm_linux_virtual_machine.jenkins_vm.public_ip_address
 }
+
+# KV output
+output "azurerm_key_vault_name" {
+  value = azurerm_key_vault.vault.name
+}
+
+output "azurerm_key_vault_id" {
+  value = azurerm_key_vault.vault.id
+}

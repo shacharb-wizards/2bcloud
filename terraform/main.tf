@@ -164,3 +164,28 @@ data "template_file" "linux-vm-cloud-init" {
 }
 
 ## prepapre AKV
+
+data "azurerm_client_config" "current" {}
+
+locals {
+  current_user_id = coalesce(var.msi_id, data.azurerm_client_config.current.object_id)
+}
+
+resource "azurerm_key_vault" "vault" {
+  name                       = "${var.resource_name_prefix}-kv"
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = var.kv_sku_name
+  soft_delete_retention_days = 7
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = local.current_user_id
+
+    key_permissions    = var.key_permissions
+    certificate_permissions    = var.certificate_permissions
+    secret_permissions = var.secret_permissions
+    storage_permissions = var.storage_permissions
+  }
+}
