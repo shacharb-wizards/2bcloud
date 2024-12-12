@@ -89,6 +89,35 @@ resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
 }
 
 # Create virtual machine
+resource "azurerm_linux_virtual_machine" "jenkins_vm" {
+  name                  = "${var.resource_name_prefix}-jenkins"
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
+  network_interface_ids = [azurerm_network_interface.jenkins_nic.id]
+  size                  = "Standard_DS1_v2"
 
+  os_disk {
+    name                 = "OsDisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+    disk_size_gb         = "30"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
+
+  computer_name  = "jenkins"
+  admin_username = var.username
+
+  admin_ssh_key {
+    username   = var.username
+    public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
+  }
+
+}
 
 ## Deploy Jenkins in VM ##

@@ -22,3 +22,9 @@ variable "subscription_id" {
   description = "The subscription_id to deploy the resources."
   default     = "2fa0e512-f70e-430f-9186-1b06543a848e"
 }
+
+variable "username" {
+  type        = string
+  description = "The username for the local account that will be created on the new VM."
+  default     = "azureadmin"
+}
