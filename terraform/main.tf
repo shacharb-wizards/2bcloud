@@ -88,6 +88,20 @@ resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
   network_security_group_id = azurerm_network_security_group.jenkins_nsg.id
 }
 
+# create user assigned identity to be used with resources
+resource "azurerm_user_assigned_identity" "user_assigned_identity" {
+  name                = "${var.resource_name_prefix}-mi"
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
+}
+
+# Create role assigment
+resource "aazurerm_role_assigment" "jenkins_role_assigment" {
+  principal_id = azurerm_user_assigned_identity.user_assigned_identity
+  scope = data.azurerm_subscription.current.id
+  role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
+}
+
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   name                  = "${var.resource_name_prefix}-jenkins"
@@ -95,6 +109,11 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.jenkins_nic.id]
   size                  = "Standard_DS1_v2"
+
+  identity {
+    type="UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
+  }
 
   os_disk {
     name                 = "OsDisk"
