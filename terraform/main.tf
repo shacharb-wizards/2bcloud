@@ -100,7 +100,7 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
     name                 = "OsDisk"
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
-    disk_size_gb         = "30"
+    disk_size_gb         = "50"
   }
 
   source_image_reference {
@@ -112,6 +112,7 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
 
   computer_name  = "jenkins"
   admin_username = var.username
+  custom_data    = base64encode(data.template_file.linux-vm-cloud-init.rendered)
 
   admin_ssh_key {
     username   = var.username
@@ -121,3 +122,7 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
 }
 
 ## Deploy Jenkins in VM ##
+# Data template Bash bootstrapping file
+data "template_file" "linux-vm-cloud-init" {
+  template = file("azure-custom-data.sh")
+}
