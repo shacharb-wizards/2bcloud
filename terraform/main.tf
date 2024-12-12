@@ -88,19 +88,36 @@ resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
   network_security_group_id = azurerm_network_security_group.jenkins_nsg.id
 }
 
-# create user assigned identity to be used with resources
-resource "azurerm_user_assigned_identity" "user_assigned_identity" {
-  name                = "${var.resource_name_prefix}-mi"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-}
+# # create user assigned identity to be used with resources
+# resource "azurerm_user_assigned_identity" "user_assigned_identity" {
+#   name                = "${var.resource_name_prefix}-mi"
+#   location              = azurerm_resource_group.rg.location
+#   resource_group_name   = azurerm_resource_group.rg.name
+# }
 
-# Create role assigment
-resource "aazurerm_role_assigment" "jenkins_role_assigment" {
-  principal_id = azurerm_user_assigned_identity.user_assigned_identity
-  scope = data.azurerm_subscription.current.id
-  role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
-}
+# # choose role
+# data "azurerm_role_definition" "contributor" {
+#   name = "Contributor"
+# }
+
+# data "azurerm_subscription" "sandbox" {
+#   subscription_id = azurerm_subscription.sandbox.subscription_id
+# }
+
+# Create role assignment
+# resource "azurerm_role_assignment" "jenkins_role_assignment" {
+#   principal_id = azurerm_linux_virtual_machine.jenkins_vm.id
+#   scope = var.subscription_id
+#   role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
+#   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
+# }
+# # Create role assigment
+# resource "azurerm_role_assignment" "jenkins_role_assignment" {
+#   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+#   scope = var.subscription_id
+#   #role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
+#   role_definition_id = "${data.azurerm_role_definition.contributor.id}"
+# }
 
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "jenkins_vm" {
@@ -110,10 +127,10 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   network_interface_ids = [azurerm_network_interface.jenkins_nic.id]
   size                  = "Standard_DS1_v2"
 
-  identity {
-    type="UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
-  }
+  # identity {
+  #   type="UserAssigned"
+  #   identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
+  # }
 
   os_disk {
     name                 = "OsDisk"
@@ -145,3 +162,5 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
 data "template_file" "linux-vm-cloud-init" {
   template = file("azure-custom-data.sh")
 }
+
+## prepapre AKV
