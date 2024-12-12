@@ -7,7 +7,7 @@ variable "resources_location" {
 
 variable "resource_name_prefix" {
   type        = string
-  default     = "shacharb"
+  default     = "shacharb-CANDIDATE_RG"
   description = "Prefix of the resource group name and others in your Azure subscription."
 }
 

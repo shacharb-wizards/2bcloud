@@ -1,4 +1,8 @@
 # Main
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
 
 # Create candidate resource group 
 resource "azurerm_resource_group" "rg" {
