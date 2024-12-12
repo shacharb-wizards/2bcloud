@@ -11,7 +11,7 @@ resource "azapi_resource_action" "ssh_public_key_gen" {
 resource "azapi_resource" "ssh_public_key" {
   type      = "Microsoft.Compute/sshPublicKeys@2022-11-01"
   name      = "${var.resource_name_prefix}-ssh-jenkins"
-  location            = var.resources_location
+  location  = var.resources_location
   parent_id = azurerm_resource_group.rg.id
 }
 
