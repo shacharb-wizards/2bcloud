@@ -24,9 +24,9 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   #  kubernetes_version  = "1.29.8"
 
   default_node_pool {
-    name                        = "default"
-    node_count                  = var.node_count
-    vm_size                     = var.node_type
+    name       = "default"
+    node_count = var.node_count
+    vm_size    = var.node_type
     #os_disk_size_gb             = 50
     os_sku                      = "AzureLinux"
     temporary_name_for_rotation = "tmpnodepool1"
@@ -66,9 +66,18 @@ provider "helm" {
 # helm repo add bitnami https://charts.bitnami.com/bitnami
 # helm fetch bitnami/redis --untar
 
-# resource "helm_release" "redis-sentinel" {
-#   name             = "redis-sentinel"
-#   chart            = "./redis"
-#   namespace        = "redis-sentinel"
-#   create_namespace = true
-# }
+resource "helm_release" "redis-sentinel" {
+  name             = "redis-sentinel"
+  chart            = "./redis"
+  namespace        = "redis-sentinel"
+  create_namespace = true
+}
+
+# create ACR
+resource "azurerm_container_registry" "acr" {
+  name                = "${var.resource_name_prefix}acr"
+  resource_group_name = var.resource_group_name
+  location            = var.resources_location
+  sku                 = "Premium"
+  admin_enabled       = false
+}
