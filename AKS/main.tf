@@ -24,11 +24,11 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   #  kubernetes_version  = "1.29.8"
 
   default_node_pool {
-    name            = "default"
-    node_count      = var.node_count
-    vm_size         = var.node_type
-    os_disk_size_gb = 50
-    os_sku          = "AzureLinux"
+    name                        = "default"
+    node_count                  = var.node_count
+    vm_size                     = var.node_type
+    #os_disk_size_gb             = 50
+    os_sku                      = "AzureLinux"
     temporary_name_for_rotation = "tmpnodepool1"
   }
 
@@ -46,23 +46,29 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 
 }
 
-# data "azurerm_kubernetes_cluster" "credentials" {
-#   name                = azurerm_kubernetes_cluster.k8s.name
-#   resource_group_name = var.resource_group_name
-# }
+data "azurerm_kubernetes_cluster" "credentials" {
+  name                = azurerm_kubernetes_cluster.k8s.name
+  resource_group_name = var.resource_group_name
+}
 
-# provider "helm" {
-#   kubernetes {
-#     host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-#     client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-#     client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-#     cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+provider "helm" {
+  kubernetes {
+    #host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+    #client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+    #client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+    #cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+    config_path = "~/.kube/config"
 
-#   }
-# }
+  }
+}
 
-# resource "helm_release" "hello_kubernetes" {
-#   name       = "my-hello-kubernetes"
-#   repository = "https://helmcharts.opsmx.com/"
-#   chart      = "hello-kubernetes"
+# Deploy redis-sentinel
+# helm repo add bitnami https://charts.bitnami.com/bitnami
+# helm fetch bitnami/redis --untar
+
+# resource "helm_release" "redis-sentinel" {
+#   name             = "redis-sentinel"
+#   chart            = "./redis"
+#   namespace        = "redis-sentinel"
+#   create_namespace = true
 # }

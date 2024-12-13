@@ -41,6 +41,7 @@ variable "node_type" {
   description = "The initial nodes type for the node pool."
   #default     = "standard_b2s"
   default = "standard_d2as_v6"
+  #default = "standard_d2s_v3"
 }
 
 variable "msi_id" {
