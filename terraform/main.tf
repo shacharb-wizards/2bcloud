@@ -88,35 +88,43 @@ resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
   network_security_group_id = azurerm_network_security_group.jenkins_nsg.id
 }
 
-# # create user assigned identity to be used with resources
-# resource "azurerm_user_assigned_identity" "user_assigned_identity" {
-#   name                = "${var.resource_name_prefix}-mi"
-#   location              = azurerm_resource_group.rg.location
-#   resource_group_name   = azurerm_resource_group.rg.name
-# }
+# create user assigned identity to be used with resources
+resource "azurerm_user_assigned_identity" "user_assigned_identity" {
+  name                = "${var.resource_name_prefix}-mi"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
 
-# # choose role
-# data "azurerm_role_definition" "contributor" {
-#   name = "Contributor"
-# }
+# choose role
+data "azurerm_role_definition" "owner" {
+  name = "Owner"
+}
 
 # data "azurerm_subscription" "sandbox" {
-#   subscription_id = azurerm_subscription.sandbox.subscription_id
+#   subscription_id = azurerm_subscription.sandbox.subscription.id
 # }
+data "azurerm_subscription" "sandbox" {}
 
-# Create role assignment
+# # Create role assignment
 # resource "azurerm_role_assignment" "jenkins_role_assignment" {
-#   principal_id = azurerm_linux_virtual_machine.jenkins_vm.id
-#   scope = var.subscription_id
-#   role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
+#   #principal_id = azurerm_linux_virtual_machine.jenkins_vm[0].id
+#   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+#   scope = azurerm_resource_group.rg.id
+#   role_definition_id = "${data.azurerm_subscription.sandbox.id}${data.azurerm_role_definition.owner.id}"
 #   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
 # }
 # # Create role assigment
+# # resource "azurerm_role_assignment" "jenkins_role_assignment" {
+# #   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+# #   scope = data.azurerm_subscription.sandbox.id
+# #   role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
+# #   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
+# # }
+
 # resource "azurerm_role_assignment" "jenkins_role_assignment" {
-#   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
-#   scope = var.subscription_id
-#   #role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
-#   role_definition_id = "${data.azurerm_role_definition.contributor.id}"
+#   scope                = azurerm_linux_virtual_machine.jenkins_vm.id
+#   role_definition_name = "Owner"
+#   principal_id         = data.azurerm_client_config.current.object_id
 # }
 
 # Create virtual machine
@@ -131,6 +139,10 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   #   type="UserAssigned"
   #   identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
   # }
+
+  identity {
+    type = "SystemAssigned"
+  }
 
   os_disk {
     name                 = "OsDisk"
@@ -173,8 +185,8 @@ locals {
 
 resource "azurerm_key_vault" "vault" {
   name                       = "${var.resource_name_prefix}-kv"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
+  location                   = azurerm_resource_group.rg.location
+  resource_group_name        = azurerm_resource_group.rg.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = var.kv_sku_name
   soft_delete_retention_days = 7
@@ -183,9 +195,9 @@ resource "azurerm_key_vault" "vault" {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = local.current_user_id
 
-    key_permissions    = var.key_permissions
-    certificate_permissions    = var.certificate_permissions
-    secret_permissions = var.secret_permissions
-    storage_permissions = var.storage_permissions
+    key_permissions         = var.key_permissions
+    certificate_permissions = var.certificate_permissions
+    secret_permissions      = var.secret_permissions
+    storage_permissions     = var.storage_permissions
   }
 }
