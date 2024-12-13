@@ -44,4 +44,5 @@ sudo usermod -aG docker jenkins;
 sudo usermod -aG docker azureadmin;
 
 # reboot after all changes:
+sudo apt upgrade -y
 sudo shutdown -r now

@@ -20,10 +20,16 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   name                = "${var.resource_name_prefix}-aks"
   resource_group_name = var.resource_group_name
   dns_prefix          = var.resource_name_prefix
-  sku_tier = "Standard"
+  sku_tier            = "Standard"
 
-  identity {
-    type = "SystemAssigned"
+  # using 
+  # identity {
+  #   type = "SystemAssigned"
+  # }
+
+  service_principal {
+    client_id     = var.appId
+    client_secret = var.password
   }
 
   default_node_pool {
