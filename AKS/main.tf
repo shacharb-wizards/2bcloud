@@ -1,4 +1,3 @@
-# Main
 provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
@@ -15,39 +14,55 @@ data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
+
 resource "azurerm_kubernetes_cluster" "k8s" {
   location            = var.resources_location
   name                = "${var.resource_name_prefix}-aks"
   resource_group_name = var.resource_group_name
   dns_prefix          = var.resource_name_prefix
   sku_tier            = "Standard"
+  #  kubernetes_version  = "1.29.8"
 
-  # using 
-  # identity {
-  #   type = "SystemAssigned"
-  # }
+  default_node_pool {
+    name            = "default"
+    node_count      = var.node_count
+    vm_size         = var.node_type
+    os_disk_size_gb = 50
+    os_sku          = "AzureLinux"
+    temporary_name_for_rotation = "tmpnodepool1"
+  }
 
   service_principal {
     client_id     = var.appId
     client_secret = var.password
   }
 
-  default_node_pool {
-    name       = "agentpool"
-    vm_size    = var.node_type
-    node_count = var.node_count
-    os_sku     = "AzureLinux"
-  }
-  linux_profile {
-    admin_username = var.username
-
-    ssh_key {
-      key_data = azapi_resource_action.ssh_public_key_gen.output.publicKey
-    }
-  }
   network_profile {
-    network_plugin    = "azure"
-    network_policy    = "calico"
-    load_balancer_sku = "standard"
+    network_plugin = "azure"
+    network_policy = "calico"
   }
+
+  role_based_access_control_enabled = true
+
 }
+
+# data "azurerm_kubernetes_cluster" "credentials" {
+#   name                = azurerm_kubernetes_cluster.k8s.name
+#   resource_group_name = var.resource_group_name
+# }
+
+# provider "helm" {
+#   kubernetes {
+#     host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+#     client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+#     client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+#     cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+
+#   }
+# }
+
+# resource "helm_release" "hello_kubernetes" {
+#   name       = "my-hello-kubernetes"
+#   repository = "https://helmcharts.opsmx.com/"
+#   chart      = "hello-kubernetes"
+# }
