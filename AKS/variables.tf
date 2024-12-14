@@ -57,3 +57,15 @@ variable "appId" {
 variable "password" {
   description = "Azure Kubernetes Service Cluster password"
 }
+
+variable "dns_zone_name" {
+  type        = string
+  default     = "shacharb.local"
+  description = "Name of the DNS zone."
+}
+
+variable "dns_ttl" {
+  type        = number
+  default     = 3600
+  description = "Time To Live (TTL) of the DNS record (in seconds)."
+}
