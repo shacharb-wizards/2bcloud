@@ -37,6 +37,9 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     client_secret = var.password
   }
 
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
+
   network_profile {
     network_plugin = "azure"
     network_policy = "calico"
@@ -49,15 +52,17 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 data "azurerm_kubernetes_cluster" "credentials" {
   name                = azurerm_kubernetes_cluster.k8s.name
   resource_group_name = var.resource_group_name
+  depends_on          = [azurerm_kubernetes_cluster.k8s]
 }
 
 provider "helm" {
   kubernetes {
-    #host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-    #client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-    #client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-    #cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
-    config_path = "~/.kube/config"
+    host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+    client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+    client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+    #in case Error: Kubernetes cluster unreachable
+    #config_path = "~/.kube/config"
 
   }
 }

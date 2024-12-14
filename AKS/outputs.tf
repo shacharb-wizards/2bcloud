@@ -22,5 +22,5 @@ output "acr_username" {
 output "acr_password" {
   description = "The admin password of the Azure Container Registry"
   value       = azurerm_container_registry.acr.admin_password
-  sensitive = true
+  sensitive   = true
 }
