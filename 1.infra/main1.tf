@@ -85,26 +85,15 @@ data "azurerm_kubernetes_cluster" "credentials" {
 
 provider "helm" {
   kubernetes {
-    host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-    client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-    client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-    cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+    # host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+    # client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+    # client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+    # cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
     #in case Error: Kubernetes cluster unreachable
-    #config_path = "~/.kube/config"
+    config_path = "~/.kube/config"
 
   }
 }
-
-# # Deploy redis-sentinel
-# # helm repo add bitnami https://charts.bitnami.com/bitnami
-# # helm fetch bitnami/redis --untar
-
-# resource "helm_release" "redis-sentinel" {
-#   name             = "redis-sentinel"
-#   chart            = "./redis"
-#   namespace        = "apps"
-#   create_namespace = true
-# }
 
 # create ACR
 resource "azurerm_container_registry" "acr" {
@@ -122,40 +111,3 @@ resource "azurerm_role_assignment" "k8s_to_acr" {
   principal_id         = azurerm_kubernetes_cluster.k8s.kubelet_identity[0].object_id
   
 }
-
-# # create DNS zone
-# resource "azurerm_dns_zone" "zone" {
-#   name = var.dns_zone_name
-#   resource_group_name = var.resource_group_name
-# }
-
-# # create static IP for Ingress
-# resource "azurerm_public_ip" "ingress_public_ip" {
-#   name                = "ingress_public_ip"
-#   location            = var.resources_location
-#   resource_group_name = var.resource_group_name
-#   allocation_method   = "Static"
-#   sku                 = "Standard"
-#   depends_on          = [azurerm_public_ip.ingress_public_ip]
-# }
-
-# # Register ingress_public_ip in DNS
-# resource "azurerm_dns_a_record" "ingress_record" {
-#   name                = "www"
-#   resource_group_name = var.resource_group_name
-#   zone_name           = azurerm_dns_zone.zone.name
-#   ttl                 = var.dns_ttl
-#   records             = [azurerm_public_ip.ingress_public_ip.ip_address]
-# }
-
-# # create ingress nginx controller
-# resource "helm_release" "ingress-nginx" {
-#   name = "external"
-#   repository       = "https://kubernetes.github.io/ingress-nginx"
-#   chart            = "ingress-nginx"
-#   namespace        = "apps"
-#   create_namespace = true
-#   version          = "4.11.3"
-
-#   values = [file("${path.module}/ingress.yaml")]
-# }

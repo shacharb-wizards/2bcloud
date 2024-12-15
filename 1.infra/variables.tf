@@ -33,7 +33,7 @@ variable "username" {
 variable "node_count" {
   type        = number
   description = "The initial quantity of nodes for the node pool."
-  default     = 3
+  default     = 2
 }
 
 variable "node_type" {
