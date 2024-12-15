@@ -14,6 +14,10 @@ data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
+# # Use user assigned identity to be used with resources
+# data "azurerm_user_assigned_identity" "user_assigned_identity" {
+#   name                = data.
+# }
 
 resource "azurerm_kubernetes_cluster" "k8s" {
   location            = var.resources_location
@@ -32,9 +36,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     temporary_name_for_rotation = "tmpnodepool1"
   }
 
-  service_principal {
-    client_id     = var.appId
-    client_secret = var.password
+  # change from SP to MSI
+  # service_principal {
+  #   client_id     = var.appId
+  #   client_secret = var.password
+  # }
+  identity {
+    type         = "SystemAssigned"
   }
 
   oidc_issuer_enabled       = true
@@ -54,7 +62,15 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   #     enabled = true
   #   }
   # }
-  ##http_application_routing_enabled = true
+  
+  
+  http_application_routing_enabled = true
+  
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
+    secret_rotation_interval = "30h"
+  }
+
 
   role_based_access_control_enabled = true
 
@@ -82,12 +98,12 @@ provider "helm" {
 # helm repo add bitnami https://charts.bitnami.com/bitnami
 # helm fetch bitnami/redis --untar
 
-# resource "helm_release" "redis-sentinel" {
-#   name             = "redis-sentinel"
-#   chart            = "./redis"
-#   namespace        = "redis-sentinel"
-#   create_namespace = true
-# }
+resource "helm_release" "redis-sentinel" {
+  name             = "redis-sentinel"
+  chart            = "./redis"
+  namespace        = "apps"
+  create_namespace = true
+}
 
 # create ACR
 resource "azurerm_container_registry" "acr" {
@@ -124,14 +140,14 @@ resource "azurerm_dns_a_record" "ingress_record" {
   records             = [azurerm_public_ip.ingress_public_ip.ip_address]
 }
 
-# # create ingress nginx
-# resource "helm_release" "ingress-nginx" {
-#   name = "external"
-#   repository       = "https://kubernetes.github.io/ingress-nginx"
-#   chart            = "ingress-nginx"
-#   namespace        = "apps"
-#   create_namespace = true
-#   version          = "4.11.3"
+# create ingress nginx
+resource "helm_release" "ingress-nginx" {
+  name = "external"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "apps"
+  create_namespace = true
+  version          = "4.11.3"
 
-#   values = [file("${path.module}/ingress.yaml")]
-# }
+  values = [file("${path.module}/ingress.yaml")]
+}

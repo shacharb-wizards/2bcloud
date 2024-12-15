@@ -168,3 +168,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+AKS/addons-after.txt
+AKS/addons-before.txt
+AKS/addons-after1.txt
