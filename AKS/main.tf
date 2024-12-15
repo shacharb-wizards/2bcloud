@@ -62,9 +62,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   #     enabled = true
   #   }
   # }
+  # web_app_routing {
+  #     dns_zone_ids = azurerm_dns_zone.zone.name_servers
+  # }
   
-  
-  http_application_routing_enabled = true
+
+
+  #http_application_routing_enabled = true
   
   key_vault_secrets_provider {
     secret_rotation_enabled = true
@@ -140,7 +144,7 @@ resource "azurerm_dns_a_record" "ingress_record" {
   records             = [azurerm_public_ip.ingress_public_ip.ip_address]
 }
 
-# create ingress nginx
+# create ingress nginx controller
 resource "helm_release" "ingress-nginx" {
   name = "external"
   repository       = "https://kubernetes.github.io/ingress-nginx"

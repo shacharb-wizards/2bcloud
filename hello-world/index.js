@@ -5,7 +5,7 @@ var app = express()
 app.get('/', function (req, res) {
   res.send('Hello World!')
 })
-//Launch listening server on port 8080 and consoles the log.
-app.listen(8080, function () {
-  console.log('app listening on port 8080!')
+//Launch listening server on port 80 and consoles the log.
+app.listen(80, function () {
+  console.log('app listening on port 80!')
 })
