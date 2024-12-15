@@ -45,6 +45,17 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_policy = "calico"
   }
 
+  # # enable addons not working
+  # addon_profile {
+  #   http_application_routing {
+  #     enabled = true
+  #   }
+  #   azure_keyvault_secrets_provider {
+  #     enabled = true
+  #   }
+  # }
+  ##http_application_routing_enabled = true
+
   role_based_access_control_enabled = true
 
 }
@@ -57,12 +68,12 @@ data "azurerm_kubernetes_cluster" "credentials" {
 
 provider "helm" {
   kubernetes {
-    host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-    client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-    client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-    cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+    # host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+    # client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+    # client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+    # cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
     #in case Error: Kubernetes cluster unreachable
-    #config_path = "~/.kube/config"
+    config_path = "~/.kube/config"
 
   }
 }
@@ -71,12 +82,12 @@ provider "helm" {
 # helm repo add bitnami https://charts.bitnami.com/bitnami
 # helm fetch bitnami/redis --untar
 
-resource "helm_release" "redis-sentinel" {
-  name             = "redis-sentinel"
-  chart            = "./redis"
-  namespace        = "redis-sentinel"
-  create_namespace = true
-}
+# resource "helm_release" "redis-sentinel" {
+#   name             = "redis-sentinel"
+#   chart            = "./redis"
+#   namespace        = "redis-sentinel"
+#   create_namespace = true
+# }
 
 # create ACR
 resource "azurerm_container_registry" "acr" {
@@ -105,15 +116,6 @@ resource "azurerm_public_ip" "ingress_public_ip" {
 }
 
 # Register ingress_public_ip in DNS
-# data "azurerm_public_ip" "ingress_public_ip" {
-#   name                = azurerm_kubernetes_cluster.k8s.name
-#   ip_address = azurerm_public_ip
-
-#   resource_group_name = var.resource_group_name
-#   depends_on          = [azurerm_kubernetes_cluster.k8s]
-# }
-
-
 resource "azurerm_dns_a_record" "ingress_record" {
   name                = "www"
   resource_group_name = var.resource_group_name
@@ -125,7 +127,6 @@ resource "azurerm_dns_a_record" "ingress_record" {
 # # create ingress nginx
 # resource "helm_release" "ingress-nginx" {
 #   name = "external"
-
 #   repository       = "https://kubernetes.github.io/ingress-nginx"
 #   chart            = "ingress-nginx"
 #   namespace        = "apps"
