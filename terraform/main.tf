@@ -95,6 +95,13 @@ resource "azurerm_user_assigned_identity" "user_assigned_identity" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+# # Create role assignment
+resource "azurerm_role_assignment" "role_assignment" {
+  scope = azurerm_resource_group.rg.id
+  role_definition_name = "Owner"
+  principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+}
+
 # choose role
 data "azurerm_role_definition" "owner" {
   name = "Owner"
@@ -105,14 +112,6 @@ data "azurerm_role_definition" "owner" {
 # }
 data "azurerm_subscription" "sandbox" {}
 
-# # Create role assignment
-# resource "azurerm_role_assignment" "jenkins_role_assignment" {
-#   #principal_id = azurerm_linux_virtual_machine.jenkins_vm[0].id
-#   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
-#   scope = azurerm_resource_group.rg.id
-#   role_definition_id = "${data.azurerm_subscription.sandbox.id}${data.azurerm_role_definition.owner.id}"
-#   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
-# }
 # # Create role assigment
 # # resource "azurerm_role_assignment" "jenkins_role_assignment" {
 # #   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
@@ -141,7 +140,8 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   # }
 
   identity {
-    type = "SystemAssigned"
+    type = "SystemAssigned, UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.id]
   }
 
   os_disk {
