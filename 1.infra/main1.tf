@@ -198,9 +198,9 @@ resource "azurerm_key_vault" "vault" {
   sku_name                   = var.kv_sku_name
   soft_delete_retention_days = 7
 
-  enabled_for_deployment = true
+  enabled_for_deployment    = true
   enable_rbac_authorization = true
-  
+
   # Use access policy  or RBAC ( I choosed RBAC)
   # access_policy {
   #   tenant_id = data.azurerm_client_config.current.tenant_id

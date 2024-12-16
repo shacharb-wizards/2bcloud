@@ -21,7 +21,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   #   client_id     = var.appId
   #   client_secret = var.password
   # }
-  
+
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.id]
@@ -47,13 +47,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   # web_app_routing {
   #     dns_zone_ids = azurerm_dns_zone.zone.name_servers
   # }
-  
+
 
 
   #http_application_routing_enabled = true
-  
+
   key_vault_secrets_provider {
-    secret_rotation_enabled = true
+    secret_rotation_enabled  = true
     secret_rotation_interval = "30h"
   }
 
@@ -93,5 +93,5 @@ resource "azurerm_role_assignment" "k8s_to_acr" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_kubernetes_cluster.k8s.kubelet_identity[0].object_id
-  
+
 }
