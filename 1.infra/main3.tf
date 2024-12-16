@@ -9,6 +9,7 @@ resource "helm_release" "redis-sentinel" {
   chart            = "../redis"
   namespace        = "apps"
   create_namespace = true
+  depends_on          = [azurerm_kubernetes_cluster.k8s]
 }
 
 
@@ -38,13 +39,14 @@ resource "azurerm_dns_a_record" "ingress_record" {
 }
 
 # # create ingress nginx controller
-# resource "helm_release" "ingress-nginx" {
-#   name = "external"
-#   repository       = "https://kubernetes.github.io/ingress-nginx"
-#   chart            = "ingress-nginx"
-#   namespace        = "apps"
-#   create_namespace = true
-#   version          = "4.11.3"
-
-#   values = [file("${path.module}/ingress.yaml")]
-# }
+resource "helm_release" "ingress-nginx" {
+  name = "external"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "apps"
+  create_namespace = true
+  version          = "4.11.3"
+  depends_on          = [azurerm_kubernetes_cluster.k8s]
+  
+  values = [file("${path.module}/ingress.yaml")]
+}

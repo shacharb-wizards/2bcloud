@@ -10,7 +10,8 @@ resource "helm_release" "cert_manager" {
   namespace        = "cert-manager"
   create_namespace = true
   version          = "v1.16.2"
-
+  depends_on          = [azurerm_kubernetes_cluster.k8s]
+  
   set {
     name  = "installCRDs"
     value = "true"
