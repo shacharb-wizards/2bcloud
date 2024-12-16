@@ -40,13 +40,13 @@ resource "azurerm_dns_a_record" "ingress_record" {
 
 # # create ingress nginx controller
 resource "helm_release" "ingress-nginx" {
-  name = "external"
+  name = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
   namespace        = "apps"
   create_namespace = true
   version          = "4.11.3"
-  depends_on          = [azurerm_kubernetes_cluster.k8s]
+  depends_on          = [azurerm_kubernetes_cluster.k8s, azurerm_dns_a_record.ingress_record]
   
   values = [file("${path.module}/ingress.yaml")]
 }

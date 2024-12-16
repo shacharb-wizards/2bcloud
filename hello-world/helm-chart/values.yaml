@@ -59,16 +59,21 @@ service:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: false
-  className: ""
+  enabled: enable
+  className: "ingress-nginx"
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/ingress.class: ngress-nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: chart-example.local
+    - host: www.shachar.local
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Exact #ImplementationSpecific
+      backend:
+              service:
+                name: hello-world
+                port:
+                  number: 80
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

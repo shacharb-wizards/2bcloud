@@ -95,7 +95,7 @@ variable "msi_id" {
 
 variable "dns_zone_name" {
   type        = string
-  default     = "shacharb.local"
+  default     = "shachar.local"
   description = "Name of the DNS zone."
 }
 
