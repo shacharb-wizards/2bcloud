@@ -9,7 +9,7 @@ controller:
   extraArgs:
     ingress-class: ingress-nginx
 
-    # need the followings for a static IP
+# need the followings for a static IP - keep as a refrance only
 # apiVersion: approuting.kubernetes.azure.com/v1alpha1
 # kind: NginxIngressController
 # metadata:

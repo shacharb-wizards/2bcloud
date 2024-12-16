@@ -114,24 +114,9 @@ resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
 }
 
 
-# data "azurerm_subscription" "sandbox" {
-#   subscription_id = azurerm_subscription.sandbox.subscription.id
-# }
+# get subscription name
 data "azurerm_subscription" "sandbox" {}
 
-# # Create role assigment
-# # resource "azurerm_role_assignment" "jenkins_role_assignment" {
-# #   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
-# #   scope = data.azurerm_subscription.sandbox.id
-# #   role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
-# #   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
-# # }
-
-# resource "azurerm_role_assignment" "jenkins_role_assignment" {
-#   scope                = azurerm_linux_virtual_machine.jenkins_vm.id
-#   role_definition_name = "Owner"
-#   principal_id         = data.azurerm_client_config.current.object_id
-# }
 
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "jenkins_vm" {
@@ -141,10 +126,6 @@ resource "azurerm_linux_virtual_machine" "jenkins_vm" {
   network_interface_ids = [azurerm_network_interface.jenkins_nic.id]
   size                  = "Standard_DS1_v2"
 
-  # identity {
-  #   type="UserAssigned"
-  #   identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
-  # }
 
   identity {
     type         = "SystemAssigned, UserAssigned"

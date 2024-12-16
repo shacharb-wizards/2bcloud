@@ -35,23 +35,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     network_policy = "calico"
   }
 
-  # # enable addons not working
-  # addon_profile {
-  #   http_application_routing {
-  #     enabled = true
-  #   }
-  #   azure_keyvault_secrets_provider {
-  #     enabled = true
-  #   }
-  # }
-  # web_app_routing {
-  #     dns_zone_ids = azurerm_dns_zone.zone.name_servers
-  # }
 
-
-
-  #http_application_routing_enabled = true
-
+  # enable addon azure-keyvault-secrets-provider for integrating AKS with AKV
   key_vault_secrets_provider {
     secret_rotation_enabled  = true
     secret_rotation_interval = "30h"
@@ -69,12 +54,12 @@ data "azurerm_kubernetes_cluster" "credentials" {
 
 provider "helm" {
   kubernetes {
-    # host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-    # client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-    # client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-    # cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
+    host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
+    client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
+    client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
     #in case Error: Kubernetes cluster unreachable
-    config_path = "~/.kube/config"
+    #config_path = "~/.kube/config"
 
   }
 }

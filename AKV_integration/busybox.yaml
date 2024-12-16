@@ -1,0 +1,29 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: busybox-secrets-store-test
+  namespace: secret-test  # $keyVaultDemoNamespace
+spec:
+  containers:
+    - name: busybox
+      image: busybox:1.37.0-glibc
+      command:
+        - "/bin/sleep"
+        - "10000"
+      volumeMounts:
+      - name: secrets-store01-inline
+        mountPath: "/mnt/secrets-store"
+        readOnly: true
+      env:
+      - name: SECRET1
+        valueFrom:
+          secretKeyRef:
+            name: secret1
+            key: examplesecretkey
+  volumes:
+    - name: secrets-store01-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kv-secret-provider"
