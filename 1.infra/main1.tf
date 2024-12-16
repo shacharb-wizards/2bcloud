@@ -1,113 +1,223 @@
-###  part 2
+# Main part 1
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
 
-# # Create candidate resource group 
+# Create candidate resource group 
 # resource "azurerm_resource_group" "rg" {
 #   location = var.resources_location
 #   name     = var.resource_group_name
 # }
 
-# # Use candidate resource group
-# data "azurerm_resource_group" "rg" {
-#   name = var.resource_group_name
-# }
+# Use candidate resource group
+data "azurerm_resource_group" "rg" {
+  name = var.resource_group_name
+}
 
-# # Use user assigned identity to be used with resources
-# data "azurerm_user_assigned_identity" "user_assigned_identity" {
-#   name                = data.
-# }
+# create user assigned identity to be used with resources
+resource "azurerm_user_assigned_identity" "user_assigned_identity" {
+  name                = "${var.resource_name_prefix}-mi"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+}
 
-resource "azurerm_kubernetes_cluster" "k8s" {
+# Create role assignment
+resource "azurerm_role_assignment" "role_assignment" {
+  scope                = data.azurerm_resource_group.rg.id
+  role_definition_name = "Owner"
+  principal_id         = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+}
+
+# choose role
+data "azurerm_role_definition" "owner" {
+  name = "Owner"
+}
+
+
+## create Jenkins VM ##
+
+# Create virtual network
+resource "azurerm_virtual_network" "vm_network" {
+  name                = "${var.resource_name_prefix}-vm-vnet"
+  address_space       = ["10.3.0.0/16"]
   location            = var.resources_location
-  name                = "${var.resource_name_prefix}-aks"
   resource_group_name = var.resource_group_name
-  dns_prefix          = var.resource_name_prefix
-  sku_tier            = "Standard"
+}
 
-  default_node_pool {
-    name       = "default"
-    node_count = var.node_count
-    vm_size    = var.node_type
-    #os_disk_size_gb             = 50
-    os_sku                      = "AzureLinux"
-    temporary_name_for_rotation = "tmpnodepool1"
+# Create subnet
+resource "azurerm_subnet" "vm_subnet" {
+  name                 = "${var.resource_name_prefix}-vm-subnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.vm_network.name
+  address_prefixes     = ["10.3.1.0/24"]
+}
+
+# Create public IPs
+resource "azurerm_public_ip" "jenkins_public_ip" {
+  name                = "${var.resource_name_prefix}-pubip-jenkins"
+  location            = var.resources_location
+  resource_group_name = var.resource_group_name
+  sku                 = "Basic"
+  allocation_method   = "Dynamic"
+}
+
+# Create NSG and rule
+resource "azurerm_network_security_group" "jenkins_nsg" {
+  name                = "${var.resource_name_prefix}-nsg-jenkins"
+  location            = var.resources_location
+  resource_group_name = var.resource_group_name
+
+  security_rule {
+    name                       = "SSH"
+    priority                   = 1001
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "Jenkins-8080"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
 
-  # change from SP to MSI
-  # service_principal {
-  #   client_id     = var.appId
-  #   client_secret = var.password
+}
+
+# Create NIC
+resource "azurerm_network_interface" "jenkins_nic" {
+  name                = "${var.resource_name_prefix}-nic-jenkins"
+  location            = var.resources_location
+  resource_group_name = var.resource_group_name
+
+  ip_configuration {
+    name                          = "${var.resource_name_prefix}-ip-jenkins"
+    subnet_id                     = azurerm_subnet.vm_subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.jenkins_public_ip.id
+  }
+}
+
+# Connect the NSG to NIC
+resource "azurerm_network_interface_security_group_association" "nsg_to_nic" {
+  network_interface_id      = azurerm_network_interface.jenkins_nic.id
+  network_security_group_id = azurerm_network_security_group.jenkins_nsg.id
+}
+
+
+# data "azurerm_subscription" "sandbox" {
+#   subscription_id = azurerm_subscription.sandbox.subscription.id
+# }
+data "azurerm_subscription" "sandbox" {}
+
+# # Create role assigment
+# # resource "azurerm_role_assignment" "jenkins_role_assignment" {
+# #   principal_id = azurerm_user_assigned_identity.user_assigned_identity.principal_id
+# #   scope = data.azurerm_subscription.sandbox.id
+# #   role_definition_id = "${var.subscription_id}${data.azurerm_role_definition.contributor.id}"
+# #   #role_definition_id = "${data.azurerm_role_definition.contributor.id}"
+# # }
+
+# resource "azurerm_role_assignment" "jenkins_role_assignment" {
+#   scope                = azurerm_linux_virtual_machine.jenkins_vm.id
+#   role_definition_name = "Owner"
+#   principal_id         = data.azurerm_client_config.current.object_id
+# }
+
+# Create virtual machine
+resource "azurerm_linux_virtual_machine" "jenkins_vm" {
+  name                  = "${var.resource_name_prefix}-jenkins"
+  location              = data.azurerm_resource_group.rg.location
+  resource_group_name   = data.azurerm_resource_group.rg.name
+  network_interface_ids = [azurerm_network_interface.jenkins_nic.id]
+  size                  = "Standard_DS1_v2"
+
+  # identity {
+  #   type="UserAssigned"
+  #   identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.principal_id]
   # }
-  
+
   identity {
-    type         = "UserAssigned"
+    type         = "SystemAssigned, UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.user_assigned_identity.id]
   }
 
-  oidc_issuer_enabled       = true
-  workload_identity_enabled = true
-
-  network_profile {
-    network_plugin = "azure"
-    network_policy = "calico"
+  os_disk {
+    name                 = "OsDisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+    disk_size_gb         = "50"
   }
 
-  # # enable addons not working
-  # addon_profile {
-  #   http_application_routing {
-  #     enabled = true
-  #   }
-  #   azure_keyvault_secrets_provider {
-  #     enabled = true
-  #   }
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
+
+  computer_name  = "jenkins"
+  admin_username = var.username
+  custom_data    = base64encode(data.template_file.linux-vm-cloud-init.rendered)
+
+  admin_ssh_key {
+    username   = var.username
+    public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
+  }
+
+}
+
+## Deploy Jenkins in VM ##
+# Data template Bash bootstrapping file
+data "template_file" "linux-vm-cloud-init" {
+  template = file("azure-custom-data.sh")
+}
+
+## prepapre AKV
+
+data "azurerm_client_config" "current" {}
+
+locals {
+  current_user_id = coalesce(var.msi_id, data.azurerm_client_config.current.object_id)
+}
+
+resource "azurerm_key_vault" "vault" {
+  name                       = "${var.resource_name_prefix}-kv"
+  location                   = data.azurerm_resource_group.rg.location
+  resource_group_name        = data.azurerm_resource_group.rg.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = var.kv_sku_name
+  soft_delete_retention_days = 7
+
+  enabled_for_deployment = true
+  enable_rbac_authorization = true
+  
+  # Use access policy  or RBAC ( I choosed RBAC)
+  # access_policy {
+  #   tenant_id = data.azurerm_client_config.current.tenant_id
+  #   object_id = local.current_user_id
+
+  #   key_permissions         = var.key_permissions
+  #   certificate_permissions = var.certificate_permissions
+  #   secret_permissions      = var.secret_permissions
+  #   storage_permissions     = var.storage_permissions
   # }
-  # web_app_routing {
-  #     dns_zone_ids = azurerm_dns_zone.zone.name_servers
-  # }
-  
-
-
-  #http_application_routing_enabled = true
-  
-  key_vault_secrets_provider {
-    secret_rotation_enabled = true
-    secret_rotation_interval = "30h"
-  }
-
-  role_based_access_control_enabled = true
 
 }
 
-data "azurerm_kubernetes_cluster" "credentials" {
-  name                = azurerm_kubernetes_cluster.k8s.name
-  resource_group_name = var.resource_group_name
-  depends_on          = [azurerm_kubernetes_cluster.k8s]
+# Create role assignment for AKV
+resource "azurerm_role_assignment" "akv_role_assignment" {
+  scope                = azurerm_key_vault.vault.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = azurerm_user_assigned_identity.user_assigned_identity.principal_id
 }
 
-provider "helm" {
-  kubernetes {
-    # host                   = data.azurerm_kubernetes_cluster.credentials.kube_config.0.host
-    # client_certificate     = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_certificate)
-    # client_key             = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.client_key)
-    # cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.credentials.kube_config.0.cluster_ca_certificate)
-    #in case Error: Kubernetes cluster unreachable
-    config_path = "~/.kube/config"
-
-  }
-}
-
-# create ACR
-resource "azurerm_container_registry" "acr" {
-  name                = "${var.resource_name_prefix}acr"
-  resource_group_name = var.resource_group_name
-  location            = var.resources_location
-  sku                 = "Premium"
-  admin_enabled       = true
-}
-
-# add the role to the identity the kubernetes cluster was assigned
-resource "azurerm_role_assignment" "k8s_to_acr" {
-  scope                = azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_kubernetes_cluster.k8s.kubelet_identity[0].object_id
-  
-}

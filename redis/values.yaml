@@ -649,7 +649,7 @@ replica:
   kind: StatefulSet
   ## @param replica.replicaCount Number of Redis&reg; replicas to deploy
   ##
-  replicaCount: 2
+  replicaCount: 3
   ## @param replica.revisionHistoryLimit The number of old history to retain to allow rollback
   ## NOTE: Explicitly setting this field to 0, will result in cleaning up all the history, breaking ability to rollback
   revisionHistoryLimit: 10
@@ -957,7 +957,7 @@ replica:
   persistence:
     ## @param replica.persistence.enabled Enable persistence on Redis&reg; replicas nodes using Persistent Volume Claims
     ##
-    enabled: true
+    enabled: false
     ## @param replica.persistence.medium Provide a medium for `emptyDir` volumes.
     ##
     medium: ""
